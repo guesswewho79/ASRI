@@ -5,3 +5,15 @@ release/
 *.log
 .env
 .env.*
+
+# ASRI v2.0
+asri_v2/.venv/
+asri_v2/frontend/node_modules/
+asri_v2/frontend/dist/
+asri_v2/backend/__pycache__/
+asri_v2/scripts/__pycache__/
+asri_v2/models/*.pt
+asri_v2/models/*.pth
+asri_v2/models/*.ckpt
+.env
+*.log
