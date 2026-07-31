@@ -1,1 +1,2 @@
-
+asri_v2/requirements.txt
+asri_v2/backend/requirements.txt
