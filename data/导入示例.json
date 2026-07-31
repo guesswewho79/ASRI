@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "name": "最小攻击图导入示例",
+    "description": "用于验证软件JSON导入功能"
+  },
+  "nodes": [
+    { "id": "H-1", "label": "边界接入服务器", "type": "host", "level": 0, "isEntry": true, "isTarget": false, "businessValue": 6, "os": "Windows Server 2022" },
+    { "id": "H-2", "label": "部门业务系统", "type": "host", "level": 1, "isEntry": false, "isTarget": false, "businessValue": 7, "os": "Ubuntu Server 22.04" },
+    { "id": "H-3", "label": "核心政务数据库", "type": "host", "level": 2, "isEntry": false, "isTarget": true, "businessValue": 10, "os": "CentOS 7" },
+    { "id": "S-1", "label": "Web政务服务", "type": "service", "hostId": "H-1", "port": 443, "protocol": "HTTPS", "exposed": true },
+    { "id": "S-2", "label": "数据库服务", "type": "service", "hostId": "H-3", "port": 1521, "protocol": "TCP", "exposed": false },
+    { "id": "V-1", "label": "示例高危漏洞", "type": "vulnerability", "hostId": "H-1", "serviceId": "S-1", "cve": "SIM-CVE-2024-9001", "cvss": 8.8, "epss": 0.42, "kev": false, "severity": "高危" },
+    { "id": "V-2", "label": "示例严重漏洞", "type": "vulnerability", "hostId": "H-3", "serviceId": "S-2", "cve": "SIM-CVE-2024-9002", "cvss": 9.4, "epss": 0.71, "kev": true, "severity": "严重" },
+    { "id": "A-1", "label": "运维账号", "type": "account", "hostId": "H-1", "privilege": "高权限" }
+  ],
+  "edges": [
+    { "id": "E-1", "source": "H-1", "target": "H-2", "type": "DEPENDS_ON" },
+    { "id": "E-2", "source": "H-2", "target": "H-3", "type": "DEPENDS_ON" },
+    { "id": "E-3", "source": "H-1", "target": "S-1", "type": "HAS_SERVICE" },
+    { "id": "E-4", "source": "H-3", "target": "S-2", "type": "HAS_SERVICE" },
+    { "id": "E-5", "source": "S-1", "target": "V-1", "type": "HAS_VULN" },
+    { "id": "E-6", "source": "S-2", "target": "V-2", "type": "HAS_VULN" },
+    { "id": "E-7", "source": "A-1", "target": "H-1", "type": "HAS_ACCESS" }
+  ]
+}
