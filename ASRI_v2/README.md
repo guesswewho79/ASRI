@@ -1,6 +1,6 @@
 # 政务外网攻击面智能预测与收敛系统 v2.0
 
-本项目根据论文《面向政务外网的攻击面智能预测与收敛研究》复现，提供可运行的前后端分离源码。v2.0在v1.0 Electron前端基础上新增Python本地算法后端，使用纯PyTorch实现关系感知GAT与PPO，不依赖PyTorch Geometric，适合在普通Windows电脑的CPU上进行小规模快速演示。
+本项目根据论文《面向政务外网的攻击面智能预测与收敛研究》复现，提供可运行的前后端分离源码。v2.0在v1.0 Electron前端基础上新增Python本地算法后端，使用纯PyTorch实现关系感知GAT与PPO，不依赖PyTorch Geometric，适合在普通Windows电脑的CPU上进行小规模快速演示。预计将在2个月后发布GPU训练版本。
 
 ## 1. 已实现内容
 
