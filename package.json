@@ -32,10 +32,10 @@
           "arch": ["x64"]
         }
       ],
-      "artifactName": "政务外网攻击面智能预测与收敛系统-绿色版-${version}.${ext}"
+      "artifactName": "政务外网攻击面智能预测与收敛系统-${version}.${ext}"
     },
     "portable": {
-      "artifactName": "政务外网攻击面智能预测与收敛系统-绿色版-${version}.${ext}"
+      "artifactName": "政务外网攻击面智能预测与收敛系统-${version}.${ext}"
     },
     "compression": "maximum",
     "npmRebuild": false
