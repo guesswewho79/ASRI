@@ -18,3 +18,31 @@ PPO Clip；
 补丁部署、网络分段、访问控制收紧三类动作；
 ASRI攻击面缩减指数；
 Windows一键启动脚本。
+
+进入源码目录：
+cd asri_v2
+
+一键启动：
+.\scripts\start_all.ps1
+
+详细运行教程请查看：
+asri_v2/README.md
+
+项目结构：
+asri_v2/
+├── backend/       # FastAPI、仿真攻击图、GAT、MDP、PPO
+├── frontend/      # Electron桌面前端
+├── models/        # 训练后的模型权重输出目录
+├── experiments/   # 实验结果预留目录
+├── scripts/       # Windows启动和API测试脚本
+├── requirements.txt
+└── README.md
+
+复现边界：
+
+## 10.3 提交README修改
+
+页面拉到底部，提交信息填写：
+
+```text
+Update README for ASRI v2.0
