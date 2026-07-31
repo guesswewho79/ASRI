@@ -15,13 +15,18 @@ cd 仓库名
 pip install -r requirements.txt# ASRI
 
 ## GitHub仓库目录结构
-GitHub仓库
-├── 源码文件
-│   ├── package.json
-│   ├── README.md
-│   ├── src/
-│   ├── data/
-│   └── scripts/
-│
-└── Releases
-    └── 政务外网攻击面智能预测与收敛系统-v1.0.exe
+ASRI/
+├── package.json
+├── README.md
+├── data/
+│   └── 导入示例.json
+├── scripts/
+│   └── build-windows.ps1
+├── assets/
+└── src/
+    ├── main.js
+    ├── preload.js
+    ├── index.html
+    ├── styles.css
+    ├── app.js
+    └── engine.js
