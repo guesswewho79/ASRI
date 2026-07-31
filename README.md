@@ -6,3 +6,15 @@
 
 ```text
 asri_v2/
+
+v2.0主要内容
+Electron桌面前端；
+Python FastAPI本地后端；
+纯PyTorch关系感知GAT；
+确定性MDP环境；
+Actor-Critic PPO；
+GAE优势估计；
+PPO Clip；
+补丁部署、网络分段、访问控制收紧三类动作；
+ASRI攻击面缩减指数；
+Windows一键启动脚本。
