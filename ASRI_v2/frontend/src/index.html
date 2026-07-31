@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8765 http://localhost:8765;">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>政务外网攻击面智能预测与收敛系统</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AS</div>
+        <div>
+          <h1>攻击面管理</h1>
+          <p>智能预测与收敛</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-page="dashboard">运行总览</button>
+        <button class="nav-item" data-page="graph">攻击图分析</button>
+        <button class="nav-item" data-page="decision">收敛决策</button>
+        <button class="nav-item" data-page="experiments">实验评估</button>
+        <button class="nav-item" data-page="backend">真实算法</button>
+        <button class="nav-item" data-page="settings">数据与参数</button>
+        <button class="nav-item" data-page="help">使用说明</button>
+      </nav>
+      <div class="sidebar-card">
+        <div class="small-title">当前数据集</div>
+        <div id="sidebarDataset" class="dataset-name">未加载</div>
+        <div id="sidebarStats" class="dataset-stats">—</div>
+      </div>
+      <div class="engine-note">
+        <span class="status-dot"></span>
+        <span>演示引擎 + PyTorch后端</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2 id="pageTitle">运行总览</h2>
+          <p id="pageSubtitle">攻击面感知、风险预测、策略收敛与实验评估</p>
+        </div>
+        <div class="top-actions">
+          <button id="btnImportTop" class="btn secondary">导入JSON</button>
+          <button id="btnQuickStart" class="btn primary">生成演示网络</button>
+        </div>
+      </header>
+
+      <section id="page-dashboard" class="page active">
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span>资产数量</span>
+            <strong id="metricAssets">—</strong>
+            <em>Host资产</em>
+          </div>
+          <div class="metric-card">
+            <span>攻击路径</span>
+            <strong id="metricPaths">—</strong>
+            <em>深度≤5的简单路径</em>
+          </div>
+          <div class="metric-card">
+            <span>活跃漏洞</span>
+            <strong id="metricVulns">—</strong>
+            <em>含示例CVE</em>
+          </div>
+          <div class="metric-card accent">
+            <span>当前ASRI</span>
+            <strong id="metricAsri">—</strong>
+            <em>攻击面缩减指数</em>
+          </div>
+        </div>
+
+        <div class="content-grid two-columns">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>资产风险分布</h3>
+                <p>基于CVSS、EPSS、KEV、业务重要性与拓扑关系</p>
+              </div>
+              <button id="btnRefreshAnalysis" class="btn secondary small">重新分析</button>
+            </div>
+            <canvas id="riskChart" width="760" height="330"></canvas>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>高风险资产排行</h3>
+                <p>优先关注路径覆盖率高、业务价值大的资产</p>
+              </div>
+              <button id="btnRunFullTop" class="btn primary small">运行收敛</button>
+            </div>
+            <div class="table-wrap compact">
+              <table>
+                <thead><tr><th>资产</th><th>业务值</th><th>风险</th><th>状态</th></tr></thead>
+                <tbody id="topAssetRows"><tr><td colspan="4" class="empty">请先生成演示网络</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel notice-panel">
+          <div>
+            <h3>v2.0算法架构</h3>
+            <p>当前页面左侧保留轻量演示引擎，用于快速展示交互和指标；“真实算法”页已接入Python本地后端，使用纯PyTorch训练关系感知GAT与PPO模型。</p>
+          </div>
+          <button id="btnOpenHelp" class="btn ghost">查看复现说明</button>
+        </div>
+      </section>
+
+      <section id="page-graph" class="page">
+        <div class="toolbar panel">
+          <label>显示范围
+            <select id="graphMode">
+              <option value="host">仅主机依赖图</option>
+              <option value="all" selected>完整异构攻击图</option>
+            </select>
+          </label>
+          <label>风险过滤
+            <select id="riskFilter">
+              <option value="all">全部节点</option>
+              <option value="high">仅高风险</option>
+              <option value="entry">入口与目标</option>
+            </select>
+          </label>
+          <label>搜索节点
+            <input id="nodeSearch" type="search" placeholder="输入资产、漏洞或服务名称">
+          </label>
+          <button id="btnGraphRefresh" class="btn secondary">刷新视图</button>
+          <button id="btnFitGraph" class="btn secondary">重置缩放</button>
+        </div>
+
+        <div class="graph-layout">
+          <div class="panel graph-panel">
+            <canvas id="graphCanvas" width="1180" height="680"></canvas>
+            <div class="graph-legend">
+              <span><i class="legend host"></i>主机资产</span>
+              <span><i class="legend service"></i>服务</span>
+              <span><i class="legend vulnerability"></i>漏洞</span>
+              <span><i class="legend account"></i>账户</span>
+              <span><i class="legend path"></i>关键攻击路径</span>
+            </div>
+          </div>
+          <div class="side-stack">
+            <div class="panel detail-panel">
+              <h3>节点详情</h3>
+              <div id="nodeDetails" class="node-details empty-state">点击图中的节点查看属性</div>
+            </div>
+            <div class="panel paths-panel">
+              <div class="panel-header">
+                <div>
+                  <h3>关键攻击路径</h3>
+                  <p>按综合风险评分排序</p>
+                </div>
+              </div>
+              <div id="topPaths" class="path-list empty-state">暂无攻击路径</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-decision" class="page">
+        <div class="decision-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>收敛策略控制</h3>
+                <p>执行补丁、分段与访问控制三类动作</p>
+              </div>
+            </div>
+            <div class="button-row">
+              <button id="btnRunStrategy" class="btn primary">运行完整收敛</button>
+              <button id="btnStepReplay" class="btn secondary">单步回放</button>
+              <button id="btnAutoReplay" class="btn secondary">自动回放</button>
+              <button id="btnResetReplay" class="btn ghost">重置回放</button>
+            </div>
+            <div class="decision-stats">
+              <div><span>剩余路径</span><strong id="decisionRemaining">—</strong></div>
+              <div><span>ASRI</span><strong id="decisionAsri">—</strong></div>
+              <div><span>操作数</span><strong id="decisionOps">—</strong></div>
+              <div><span>防御有效性</span><strong id="decisionDefense">—</strong></div>
+            </div>
+            <canvas id="asriCurve" width="820" height="300"></canvas>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>收敛动作序列</h3>
+                <p>展示模型每一步的决策依据</p>
+              </div>
+            </div>
+            <div id="actionTimeline" class="timeline empty-state">尚未运行收敛策略</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-experiments" class="page">
+        <div class="button-row panel experiment-actions">
+          <button id="btnRunExperiment" class="btn primary">运行基线对比</button>
+          <button id="btnRunSensitivity" class="btn secondary">运行敏感性分析</button>
+          <button id="btnExportJson" class="btn secondary">导出JSON结果</button>
+          <button id="btnExportCsv" class="btn secondary">导出动作CSV</button>
+          <button id="btnExportReport" class="btn secondary">导出HTML报告</button>
+        </div>
+        <div class="content-grid two-columns">
+          <div class="panel">
+            <h3>方法对比</h3>
+            <canvas id="baselineChart" width="720" height="330"></canvas>
+          </div>
+          <div class="panel">
+            <h3>实验结果表</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>方法</th><th>ASRI</th><th>操作数</th><th>收敛步数</th><th>防御有效性</th></tr></thead>
+                <tbody id="experimentRows"><tr><td colspan="5" class="empty">尚未运行实验</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="content-grid three-columns">
+          <div class="panel"><h3>奖励权重 λ 敏感性</h3><canvas id="lambdaChart" width="420" height="260"></canvas></div>
+          <div class="panel"><h3>局部视图跳数 k</h3><canvas id="kChart" width="420" height="260"></canvas></div>
+          <div class="panel"><h3>GAT层数 L</h3><canvas id="layerChart" width="420" height="260"></canvas></div>
+        </div>
+      </section>
+
+      <section id="page-backend" class="page">
+        <div class="backend-status panel">
+          <div>
+            <h3>真实算法后端</h3>
+            <p>纯PyTorch实现关系感知GAT与PPO，默认CPU小规模快速演示。</p>
+          </div>
+          <div class="backend-connect">
+            <input id="backendUrl" type="text" value="http://127.0.0.1:8765" aria-label="后端地址">
+            <button id="btnBackendHealth" class="btn secondary">连接后端</button>
+            <span id="backendStatus" class="backend-badge offline">未连接</span>
+          </div>
+        </div>
+
+        <div class="content-grid two-columns">
+          <div class="panel form-panel">
+            <div class="panel-header">
+              <div>
+                <h3>1. 创建真实算法会话</h3>
+                <p>生成后端仿真攻击图，参数独立于左侧演示引擎</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label>主机数量<input id="backendHostCount" type="number" min="30" max="800" value="80"></label>
+              <label>随机种子<input id="backendSeed" type="number" value="20260731"></label>
+              <label>漏洞密度<input id="backendVulnDensity" type="number" min="0.5" max="6" step="0.1" value="1.8"></label>
+              <label>拓扑类型
+                <select id="backendTopology">
+                  <option value="hierarchy">层级型</option>
+                  <option value="tree">树型</option>
+                  <option value="grid">网格型</option>
+                  <option value="mesh">复杂互联型</option>
+                  <option value="star">星型</option>
+                </select>
+              </label>
+              <label>GAT层数<input id="backendGatLayers" type="number" min="1" max="4" value="2"></label>
+              <label>注意力头数<input id="backendHeads" type="number" min="1" max="16" value="4"></label>
+              <label>隐藏维度<input id="backendHiddenDim" type="number" min="32" max="256" step="32" value="64"></label>
+              <label>最大步数<input id="backendMaxSteps" type="number" min="5" max="60" value="16"></label>
+            </div>
+            <div class="button-row">
+              <button id="btnCreateBackendSession" class="btn primary">创建算法会话</button>
+            </div>
+            <div id="backendSessionInfo" class="backend-session empty-state">尚未创建会话</div>
+          </div>
+
+          <div class="panel form-panel">
+            <div class="panel-header">
+              <div>
+                <h3>2. 训练GAT与PPO</h3>
+                <p>先训练GAT风险表示模型，再训练PPO收敛策略</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label>GAT训练轮数<input id="backendGatEpochs" type="number" min="5" max="300" value="30"></label>
+              <label>GAT学习率<input id="backendGatLr" type="number" min="0.0001" max="0.01" step="0.0001" value="0.0003"></label>
+              <label>PPO训练回合<input id="backendPpoEpisodes" type="number" min="4" max="300" value="16"></label>
+              <label>PPO学习率<input id="backendPpoLr" type="number" min="0.0001" max="0.01" step="0.0001" value="0.0003"></label>
+              <label>PPO裁剪阈值<input id="backendPpoClip" type="number" min="0.05" max="0.5" step="0.05" value="0.2"></label>
+              <label>折扣因子<input id="backendGamma" type="number" min="0.8" max="0.999" step="0.01" value="0.95"></label>
+            </div>
+            <div class="button-row">
+              <button id="btnTrainGat" class="btn primary">训练GAT</button>
+              <button id="btnTrainPpo" class="btn primary">训练PPO</button>
+              <button id="btnRunBackendConverge" class="btn secondary">运行真实收敛</button>
+            </div>
+            <div class="job-progress">
+              <div class="job-progress-bar"><span id="jobProgressBar"></span></div>
+              <div id="jobStatusText" class="job-status-text">暂无训练任务</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-grid two-columns">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>训练日志</h3>
+                <p>展示GAT轮次、PPO回合和策略更新情况</p>
+              </div>
+            </div>
+            <pre id="backendLog" class="backend-log">等待后端任务……</pre>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>真实算法结果</h3>
+                <p>展示训练结果和PPO收敛动作序列</p>
+              </div>
+            </div>
+            <div id="backendResult" class="backend-result empty-state">尚未生成真实算法结果</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-settings" class="page">
+        <div class="content-grid two-columns">
+          <div class="panel form-panel">
+            <div class="panel-header">
+              <div>
+                <h3>仿真网络配置</h3>
+                <p>生成内置演示拓扑与漏洞数据</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label>主机数量<input id="cfgHostCount" type="number" min="30" max="2000" value="180"></label>
+              <label>随机种子<input id="cfgSeed" type="number" value="20260731"></label>
+              <label>拓扑类型
+                <select id="cfgTopology">
+                  <option value="hierarchy">层级型（默认）</option>
+                  <option value="tree">树型</option>
+                  <option value="grid">网格型</option>
+                  <option value="mesh">复杂互联型</option>
+                  <option value="star">星型</option>
+                </select>
+              </label>
+              <label>漏洞密度<input id="cfgVulnDensity" type="number" min="0.5" max="6" step="0.1" value="2.8"></label>
+              <label>路径最大长度<input id="cfgMaxPathLength" type="number" min="2" max="7" value="5"></label>
+              <label>路径枚举上限<input id="cfgMaxPaths" type="number" min="500" max="30000" value="6000"></label>
+            </div>
+            <div class="button-row">
+              <button id="btnGenerate" class="btn primary">生成网络</button>
+              <button id="btnImport" class="btn secondary">导入JSON数据</button>
+              <button id="btnSampleSchema" class="btn ghost">查看导入格式</button>
+            </div>
+          </div>
+
+          <div class="panel form-panel">
+            <div class="panel-header">
+              <div>
+                <h3>模型与策略参数</h3>
+                <p>参数对应论文中的GAT、局部视图和奖励函数</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label>局部视图跳数 k<input id="cfgLocalViewK" type="number" min="1" max="3" value="2"></label>
+              <label>GAT层数 L<input id="cfgGatLayers" type="number" min="1" max="4" value="2"></label>
+              <label>注意力头数 M<input id="cfgHeads" type="number" min="1" max="16" value="8"></label>
+              <label>特征维度 d<input id="cfgFeatureDim" type="number" min="32" max="512" step="32" value="128"></label>
+              <label>PPO裁剪阈值<input id="cfgPpoClip" type="number" min="0.05" max="0.5" step="0.05" value="0.2"></label>
+              <label>最大收敛步数<input id="cfgMaxSteps" type="number" min="5" max="80" value="28"></label>
+              <label>λ-CVSS<input id="cfgLambdaCvss" type="number" min="0" max="1" step="0.05" value="0.40"></label>
+              <label>λ-威胁情报<input id="cfgLambdaThreat" type="number" min="0" max="1" step="0.05" value="0.20"></label>
+              <label>λ-业务重要性<input id="cfgLambdaBusiness" type="number" min="0" max="1" step="0.05" value="0.20"></label>
+              <label>λ-路径收敛<input id="cfgLambdaDefense" type="number" min="0" max="1" step="0.05" value="0.20"></label>
+            </div>
+            <div class="button-row">
+              <button id="btnApplyConfig" class="btn primary">应用参数</button>
+              <button id="btnResetConfig" class="btn ghost">恢复默认</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>导入数据说明</h3>
+          <pre id="schemaPreview" class="schema-preview">点击“查看导入格式”显示JSON结构示例。</pre>
+        </div>
+      </section>
+
+      <section id="page-help" class="page">
+        <div class="panel help-panel">
+          <h3>软件复现说明</h3>
+          <div class="help-content">
+            <p><strong>已复现内容：</strong>异构攻击图、Host/Service/Vulnerability/Account节点、四类关系、深度受限路径枚举、局部视图、补丁/分段/访问控制三类动作、四维奖励函数、ASRI指标、基线对比与敏感性分析。</p>
+            <p><strong>真实算法模式：</strong>v2.0新增Python FastAPI本地后端，使用纯PyTorch实现关系感知GAT和PPO；前端可创建仿真攻击图会话、启动训练、查看日志并执行PPO收敛推理。CPU小规模参数适合快速演示。</p>
+            <p><strong>后续扩展：</strong>当前源码已具备算法替换边界，可继续接入NVD、EPSS、KEV真实数据和NASim环境，以开展论文级数值复现和大规模训练。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+  <script src="backend.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "name": "attack-surface-studio",
+  "version": "2.0.0",
+  "description": "政务外网攻击面智能预测与收敛系统：Electron前端 + PyTorch GAT/PPO后端",
+  "main": "src/main.js",
+  "author": "Attack Surface Studio",
+  "license": "MIT",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable --x64",
+    "pack": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "cn.gov.asm.AttackSurfaceStudio",
+    "productName": "政务外网攻击面智能预测与收敛系统",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "data/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "政务外网攻击面智能预测与收敛系统-绿色版-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "政务外网攻击面智能预测与收敛系统-绿色版-${version}.${ext}"
+    },
+    "compression": "maximum",
+    "npmRebuild": false
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3"
+  }
+}
